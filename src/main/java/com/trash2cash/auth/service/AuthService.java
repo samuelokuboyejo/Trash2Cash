@@ -11,15 +11,20 @@ import com.trash2cash.users.model.User;
 import com.trash2cash.users.model.Wallet;
 import com.trash2cash.users.repo.UserRepository;
 import com.trash2cash.users.repo.WalletRepository;
+import com.trash2cash.users.utils.UserCreatedEvent;
 import com.trash2cash.users.utils.UserProfileResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.concurrent.CompletableFuture;
 
 @Service
 @RequiredArgsConstructor
@@ -31,12 +36,29 @@ public class AuthService {
     private final AuthenticationManager authenticationManager;
     private final GoogleTokenVerifier googleTokenVerifier;
     private final WalletRepository walletRepository;
+    private final ApplicationEventPublisher publisher;
 
 
+    public Wallet createWalletForUser(Long userId) {
+        return walletRepository.findByUserId(userId).orElseGet(() -> {
+            User user = userRepository.findById(userId)
+                    .orElseThrow(() -> new RuntimeException("User not found"));
 
-    public AuthResponse register(RegisterRequest request){
-        if (userRepository.existsByEmail(request.getEmail())) {
-            throw new RuntimeException("Email already exists!");
+            Wallet wallet = new Wallet();
+            wallet.setUser(user);
+            wallet.setBalance(BigDecimal.ZERO);
+
+            return walletRepository.save(wallet);
+        });
+    }
+            @Async
+            public void createWalletAsync(Long userId) {
+                createWalletForUser(userId);
+            }
+
+            public AuthResponse register(RegisterRequest request){
+                if (userRepository.existsByEmail(request.getEmail())) {
+                    throw new RuntimeException("Email already exists!");
         }
         if (userRepository.existsByFirstName(request.getFirstName())) {
             throw new RuntimeException("First name already exists!");
@@ -50,6 +72,8 @@ public class AuthService {
                 .createdAt(LocalDateTime.now())
                 .build();
         User savedUser = userRepository.save(user);
+        publisher.publishEvent(new UserCreatedEvent(savedUser.getId()));
+        createWalletAsync(savedUser.getId());
         var accessToken = jwtService.generateToken(savedUser);
         var refreshToken = refreshTokenService.createRefreshToken(savedUser.getEmail());
 

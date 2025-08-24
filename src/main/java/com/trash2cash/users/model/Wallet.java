@@ -9,7 +9,9 @@ import java.time.LocalDateTime;
 
 @Data
 @Entity
-@Table(name = "wallet")
+@Table(name = "wallet", uniqueConstraints = {
+        @UniqueConstraint(columnNames = "user_id")
+})
 @NoArgsConstructor
 @AllArgsConstructor
 public class Wallet {

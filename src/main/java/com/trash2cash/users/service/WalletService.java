@@ -3,8 +3,10 @@ package com.trash2cash.users.service;
 import com.trash2cash.users.dto.WithdrawRequest;
 import com.trash2cash.users.enums.TransactionType;
 import com.trash2cash.users.model.Transaction;
+import com.trash2cash.users.model.User;
 import com.trash2cash.users.model.Wallet;
 import com.trash2cash.users.repo.TransactionRepository;
+import com.trash2cash.users.repo.UserRepository;
 import com.trash2cash.users.repo.WalletRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -19,10 +21,22 @@ public class WalletService {
     private final WalletRepository walletRepository;
     private final TransactionRepository transactionRepository;
     private final PaymentGatewayService paymentGatewayService;
+    private final UserRepository userRepository;
 
     public Wallet getUserWallet(Long userId) {
         return walletRepository.findByUserId(userId)
                 .orElseThrow(() -> new RuntimeException("Wallet not found for user " + userId));
+    }
+
+    public Wallet createWalletForUser(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        Wallet wallet = new Wallet();
+        wallet.setUser(user);
+        wallet.setBalance(BigDecimal.ZERO);
+
+        return walletRepository.save(wallet);
     }
 
     @Transactional
