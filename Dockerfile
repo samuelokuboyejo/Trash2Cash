@@ -9,6 +9,12 @@ RUN mvn clean package -DskipTests
 FROM openjdk:17.0.1-jdk-slim
 WORKDIR /app
 COPY --from=build /app/target/Trash2Cash-0.0.1-SNAPSHOT.jar Trash2Cash.jar
-EXPOSE 8089
-ENTRYPOINT ["java","-jar","Trash2Cash.jar"]
 
+# Environment variable for Spring Boot port
+ENV SERVER_PORT=8089
+
+# Expose the port
+EXPOSE 8089
+
+# Run the application
+ENTRYPOINT ["java","-jar","Trash2Cash.jar"]
