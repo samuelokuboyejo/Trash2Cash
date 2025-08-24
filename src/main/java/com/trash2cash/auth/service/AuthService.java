@@ -8,7 +8,10 @@ import com.trash2cash.users.dto.LoginRequest;
 import com.trash2cash.users.dto.RegisterRequest;
 import com.trash2cash.users.enums.Status;
 import com.trash2cash.users.model.User;
+import com.trash2cash.users.model.Wallet;
 import com.trash2cash.users.repo.UserRepository;
+import com.trash2cash.users.repo.WalletRepository;
+import com.trash2cash.users.utils.UserProfileResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -27,6 +30,7 @@ public class AuthService {
     private final RefreshTokenService refreshTokenService;
     private final AuthenticationManager authenticationManager;
     private final GoogleTokenVerifier googleTokenVerifier;
+    private final WalletRepository walletRepository;
 
 
 
@@ -55,7 +59,7 @@ public class AuthService {
                 .build();
     }
 
-    public AuthResponse login(LoginRequest loginRequest){
+    public UserProfileResponse login(LoginRequest loginRequest){
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         loginRequest.getEmail(),
@@ -63,12 +67,16 @@ public class AuthService {
         );
 
         var user = userRepository.findByEmail(loginRequest.getEmail()).orElseThrow(()-> new UsernameNotFoundException("User not found"));
+        Wallet wallet = walletRepository.findByUserId(user.getId())
+                .orElseThrow(() -> new RuntimeException("Wallet not found"));
         var accessToken = jwtService.generateToken(user);
         var refreshToken = refreshTokenService.createRefreshToken(loginRequest.getEmail());
 
-        return AuthResponse.builder()
-                .accessToken(accessToken)
-                .refreshToken(refreshToken.getRefreshToken())
+        return UserProfileResponse.builder()
+                .firstName(user.getFirstName())
+                .id(user.getId())
+                .walletBalance(wallet.getBalance())
+                .points(wallet.getPoints())
                 .build();
     }
 

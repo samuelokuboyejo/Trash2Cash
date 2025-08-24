@@ -6,6 +6,7 @@ import com.trash2cash.auth.service.RefreshTokenService;
 import com.trash2cash.auth.utils.AuthResponse;
 import com.trash2cash.users.dto.LoginRequest;
 import com.trash2cash.users.dto.RegisterRequest;
+import com.trash2cash.users.utils.UserProfileResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -55,7 +56,7 @@ public class AuthController {
             @ApiResponse(responseCode = "401", description = "Invalid credentials", content = @Content)
     })
     @PostMapping("/login")
-    public ResponseEntity<AuthResponse> login(@RequestBody LoginRequest loginRequest){
+    public ResponseEntity<UserProfileResponse> login(@RequestBody LoginRequest loginRequest){
         return ResponseEntity.ok(authService.login(loginRequest));
     }
 
