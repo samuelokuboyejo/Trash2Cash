@@ -101,6 +101,8 @@ public class AuthService {
                 .id(user.getId())
                 .walletBalance(wallet.getBalance())
                 .points(wallet.getPoints())
+                .accessToken(accessToken)
+                .refreshToken(refreshToken.getRefreshToken())
                 .build();
     }
 

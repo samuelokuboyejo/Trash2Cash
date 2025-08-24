@@ -14,4 +14,8 @@ public class UserProfileResponse {
     private String firstName;
     private BigDecimal walletBalance;
     private Long points;
+
+    private String  accessToken;
+
+    private String  refreshToken;
 }
