@@ -1,0 +1,30 @@
+version: '3.8'
+services:
+  db:
+    image: postgres:15
+    container_name: trash2cash_db
+    environment:
+      POSTGRES_USER: waste_connect_db_user
+      POSTGRES_PASSWORD: FW9yYjaqAMDK6PURbEKAJmQ3bWwsaKLB
+      POSTGRES_DB: waste_connect_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+
+  app:
+    build: .
+    container_name: trash2cash_app
+    depends_on:
+      - db
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/waste_connect_db
+      SPRING_DATASOURCE_USERNAME: waste_connect_db_user
+      SPRING_DATASOURCE_PASSWORD: FW9yYjaqAMDK6PURbEKAJmQ3bWwsaKLB
+      SPRING_PROFILES_ACTIVE: docker
+    ports:
+      - "8089:8089"
+    restart: unless-stopped
+
+volumes:
+  db_data:
