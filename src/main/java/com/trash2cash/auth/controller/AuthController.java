@@ -60,15 +60,15 @@ public class AuthController {
     }
 
 
-    @Operation(
-            summary = "Login with Google OAuth2",
-            description = "Authenticates a user via Google Sign-In. The client (Flutter app) must obtain a valid Google ID token from the Google Sign-In SDK and send it to this endpoint. " +
-                    "The backend verifies the token with Google's servers, creates a user account if it does not exist, and returns an authentication response containing access/refresh tokens."
-    )
-    @PostMapping("/google")
-    public ResponseEntity<AuthResponse> googleLogin(@RequestBody Map<String, String> body) throws Exception {
-        String idToken = body.get("idToken");
-        AuthResponse response = authService.loginWithGoogle(idToken);
-        return ResponseEntity.ok(response);
-    }
+//    @Operation(
+//            summary = "Login with Google OAuth2",
+//            description = "Authenticates a user via Google Sign-In. The client (Flutter app) must obtain a valid Google ID token from the Google Sign-In SDK and send it to this endpoint. " +
+//                    "The backend verifies the token with Google's servers, creates a user account if it does not exist, and returns an authentication response containing access/refresh tokens."
+//    )
+//    @PostMapping("/google")
+//    public ResponseEntity<AuthResponse> googleLogin(@RequestBody Map<String, String> body) throws Exception {
+//        String idToken = body.get("idToken");
+//        AuthResponse response = authService.loginWithGoogle(idToken);
+//        return ResponseEntity.ok(response);
+//    }
 }
