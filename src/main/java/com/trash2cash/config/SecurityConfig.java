@@ -28,12 +28,14 @@ public class SecurityConfig {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth-> auth
-                        .requestMatchers("/auth/**", "/wallets/**", "/ads", "/search/{services}", "/v3/api-docs/**",
-                                "/swagger-ui/**",
-                                "/swagger-ui.html")
-                        .permitAll()
+//                        .requestMatchers("/auth/**", "/wallets/**", "/v3/api-docs/**",
+//                                "/swagger-ui/**",
+//                                "/swagger-ui.html")
+//                        .permitAll()
                         .anyRequest()
-                        .authenticated())
+                        .permitAll()
+//                        .authenticated()
+                        )
 //                .oauth2Login(Customizer.withDefaults())
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS) )
