@@ -3,6 +3,7 @@ package com.trash2cash.users.controller;
 import com.trash2cash.users.model.WasteListing;
 import com.trash2cash.users.service.WasteListingService;
 import com.trash2cash.users.dto.WasteListingRequest;
+import com.trash2cash.users.utils.ListingResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -41,12 +42,9 @@ public class WasteListingController {
                     @ApiResponse(responseCode = "400", description = "Invalid input", content = @Content)
             }
     )
-    @PostMapping(consumes = {"multipart/form-data"})
-    public ResponseEntity<WasteListing> createListing(
-            @ModelAttribute WasteListingRequest request,
-            @RequestParam("image") MultipartFile imageFile
-    ) {
-        WasteListing listing = wasteListingService.createListing(request, imageFile);
+    @PostMapping
+    public ResponseEntity<ListingResponse> createListing(@RequestBody WasteListingRequest request) {
+        ListingResponse listing = wasteListingService.createListing(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(listing);
     }
     @GetMapping

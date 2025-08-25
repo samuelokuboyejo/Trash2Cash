@@ -24,12 +24,10 @@ public class WasteListing {
     @Enumerated(EnumType.STRING)
     private WasteType type;
 
-    private long unit;
+    private double unit;
     private double weight;
 
     private String contactPhone;
 
-    @Lob
-    @Column(columnDefinition = "BYTEA")
-    private byte[] image;
+    private String imageUrl;
 }
