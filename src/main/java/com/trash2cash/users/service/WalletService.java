@@ -91,9 +91,13 @@ public class WalletService {
     }
 
     @Transactional
-    public Wallet addPoints(Long userId, int points) {
+    public WalletDto addPoints(Long userId, int points) {
         Wallet wallet = getUserWallet(userId);
         wallet.setPoints(wallet.getPoints() + points);
-        return walletRepository.save(wallet);
+        return  WalletDto.builder()
+                .balance(wallet.getBalance())
+                .id(wallet.getId())
+                .points(wallet.getPoints())
+                .build();
     }
 }

@@ -77,13 +77,13 @@ public class WalletController {
             @ApiResponse(responseCode = "404", description = "Wallet or User not found")
     })
     @PostMapping("/{userId}/points")
-    public Wallet addPoints(
+    public ResponseEntity<WalletDto> addPoints(
             @Parameter(description = "ID of the user whose wallet points will be updated", example = "1")
             @PathVariable Long userId,
 
             @Parameter(description = "Number of points to add", example = "50")
             @RequestParam int points
     ) {
-        return walletService.addPoints(userId, points);
+        return ResponseEntity.ok(walletService.addPoints(userId, points));
     }
 }
