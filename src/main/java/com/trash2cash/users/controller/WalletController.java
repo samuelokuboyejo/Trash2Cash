@@ -1,5 +1,6 @@
 package com.trash2cash.users.controller;
 
+import com.trash2cash.users.dto.WalletDto;
 import com.trash2cash.users.dto.WithdrawRequest;
 import com.trash2cash.users.model.Transaction;
 import com.trash2cash.users.model.Wallet;
@@ -51,7 +52,7 @@ public class WalletController {
             @ApiResponse(responseCode = "400", description = "Invalid deposit request")
     })
     @PostMapping("/{userId}/deposit")
-    public ResponseEntity<Wallet> deposit(
+    public ResponseEntity<WalletDto> deposit(
             @Parameter(description = "ID of the user", example = "1") @PathVariable Long userId,
             @Parameter(description = "Amount to deposit", example = "1000.50") @RequestParam BigDecimal amount) {
         return ResponseEntity.ok(walletService.deposit(userId, amount));

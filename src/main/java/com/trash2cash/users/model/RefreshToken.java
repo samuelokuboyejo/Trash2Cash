@@ -1,5 +1,7 @@
 package com.trash2cash.users.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -26,5 +28,7 @@ public class RefreshToken {
     private Instant expirationTime;
 
     @OneToOne
+    @JoinColumn(name = "user_id")
+    @JsonBackReference
     private User user;
 }

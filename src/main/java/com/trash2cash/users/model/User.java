@@ -8,6 +8,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+
 
 import java.net.ProtocolFamily;
 import java.time.LocalDateTime;
@@ -34,7 +36,8 @@ public class User implements UserDetails {
     @Column(name = "password")
     private String password;
 
-    @OneToOne(mappedBy = "user")
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
+    @JsonManagedReference
     private ForgotPassword forgotPassword;
 
     @OneToOne(mappedBy= "user")

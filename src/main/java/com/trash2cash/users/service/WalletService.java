@@ -1,5 +1,6 @@
 package com.trash2cash.users.service;
 
+import com.trash2cash.users.dto.WalletDto;
 import com.trash2cash.users.dto.WithdrawRequest;
 import com.trash2cash.users.enums.TransactionType;
 import com.trash2cash.users.model.Transaction;
@@ -40,12 +41,19 @@ public class WalletService {
     }
 
     @Transactional
-    public Wallet deposit(Long userId, BigDecimal amount) {
+    public WalletDto deposit(Long userId, BigDecimal amount) {
         Wallet wallet = getUserWallet(userId);
         wallet.setBalance(wallet.getBalance().add(amount));
         wallet.setUpdatedAt(LocalDateTime.now());
-        return walletRepository.save(wallet);
+        walletRepository.save(wallet);
+
+        return  WalletDto.builder()
+                .balance(wallet.getBalance())
+                .id(wallet.getId())
+                .points(wallet.getPoints())
+                .build();
     }
+
 
     @Transactional
     public Transaction withdraw(WithdrawRequest request) {
