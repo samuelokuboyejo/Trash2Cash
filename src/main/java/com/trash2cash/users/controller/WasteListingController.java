@@ -20,6 +20,7 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 @Tag(name = "Waste Listing")
+@RequestMapping("/listings")
 public class WasteListingController {
     private final WasteListingService wasteListingService;
 
