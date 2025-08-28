@@ -1,20 +1,20 @@
 package com.trash2cash.users.utils;
 
 import com.trash2cash.users.service.WalletService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.event.TransactionPhase;
+import org.springframework.transaction.event.TransactionalEventListener;
 
 @Component
+@RequiredArgsConstructor
 public class WalletEventListener {
     private final WalletService walletService;
 
-    public WalletEventListener(WalletService walletService) {
-        this.walletService = walletService;
-    }
-
-    @EventListener
     @Async
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handleUserCreated(UserCreatedEvent event) {
         walletService.createWalletForUser(event.getUserId());
     }

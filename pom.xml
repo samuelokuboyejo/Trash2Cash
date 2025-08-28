@@ -137,6 +137,7 @@
 							<artifactId>lombok</artifactId>
 						</exclude>
 					</excludes>
+					<finalName>trash2cash</finalName>
 				</configuration>
 			</plugin>
 		</plugins>

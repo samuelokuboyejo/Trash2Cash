@@ -29,6 +29,7 @@ public class WalletService {
                 .orElseThrow(() -> new RuntimeException("Wallet not found for user " + userId));
     }
 
+    @Transactional
     public Wallet createWalletForUser(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));

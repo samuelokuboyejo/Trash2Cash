@@ -43,7 +43,7 @@ public class User implements UserDetails {
     @OneToOne(mappedBy= "user")
     private RefreshToken refreshToken;
 
-    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, optional = false, orphanRemoval = true)
     private Wallet wallet;
 
     private LocalDateTime termsAcceptedAt;
