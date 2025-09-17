@@ -16,6 +16,7 @@ public class LoginResponse {
     private String firstName;
     private BigDecimal walletBalance;
     private Long points;
+    private Long unreadNotifications;
 
     private String  accessToken;
 

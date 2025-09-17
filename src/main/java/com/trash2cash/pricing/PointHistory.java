@@ -1,4 +1,4 @@
-package com.trash2cash.notifications;
+package com.trash2cash.pricing;
 
 import com.trash2cash.users.model.User;
 import jakarta.persistence.*;
@@ -12,22 +12,18 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Table(name = "notifications")
-public class Notification {
+public class PointHistory {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String title;
-
-    private String message;
-
-    @Builder.Default
-    private Boolean readStatus = false;
-
-    private LocalDateTime createdAt;
-
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
+
+    private int points;
+    private String reason;  // e.g. "Pickup Completed", "Referral Bonus"
+
+    private LocalDateTime createdAt = LocalDateTime.now();
 }
+

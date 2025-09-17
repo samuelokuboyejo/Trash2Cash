@@ -1,5 +1,8 @@
 package com.trash2cash.wallet;
 
+import com.trash2cash.notifications.NotificationService;
+import com.trash2cash.notifications.NotificationUtils;
+import com.trash2cash.transactions.TransactionDto;
 import com.trash2cash.users.dto.WalletDto;
 import com.trash2cash.users.dto.WithdrawRequest;
 import com.trash2cash.users.enums.TransactionType;
@@ -9,6 +12,7 @@ import com.trash2cash.users.model.User;
 import com.trash2cash.users.service.PaymentGatewayService;
 import com.trash2cash.transactions.TransactionRepository;
 import com.trash2cash.users.repo.UserRepository;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,6 +27,7 @@ public class WalletService {
     private final TransactionRepository transactionRepository;
     private final PaymentGatewayService paymentGatewayService;
     private final UserRepository userRepository;
+    private final NotificationService notificationService;
 
     public Wallet getUserWallet(Long userId) {
         return walletRepository.findByUserId(userId)
@@ -57,39 +62,59 @@ public class WalletService {
 
 
     @Transactional
-    public Transaction withdraw(WithdrawRequest request) {
-        // 1. Fetch wallet
-        Wallet wallet = walletRepository.findByUserId(1L) // TODO: replace with logged-in user
-                .orElseThrow(() -> new RuntimeException("Wallet not found"));
+    public TransactionDto withdraw(WithdrawRequest request, String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
+
+        Wallet wallet = walletRepository.findByUserId(user.getId())
+                .orElseThrow(() -> new EntityNotFoundException("Wallet not found"));
 
         if (wallet.getBalance().compareTo(request.getAmount()) < 0) {
-            throw new RuntimeException("Insufficient funds");
+            throw new IllegalArgumentException("Insufficient funds");
         }
 
-
-        // 2. Call Paystack/Flutterwave Payout API
+        // Call Paystack/Flutterwave Payout API
         boolean payoutSuccess = paymentGatewayService.processWithdrawal(
-                request.getAmount(), request.getBankCode(), request.getAccountNumber()
+                request.getAmount(),
+                request.getBankCode(),
+                request.getAccountNumber()
         );
 
         if (!payoutSuccess) {
-            throw new RuntimeException("Withdrawal failed");
+            throw new IllegalStateException("Withdrawal failed, please try again later");
         }
 
-        // 3. Deduct balance
+        // Deduct balance
         wallet.setBalance(wallet.getBalance().subtract(request.getAmount()));
         walletRepository.save(wallet);
 
-        // 4. Log transaction
+        // Log transaction
         Transaction transaction = Transaction.builder()
                 .amount(request.getAmount())
                 .type(TransactionType.WITHDRAWAL)
                 .status(WithdrawalStatus.SUCCESS)
                 .user(wallet.getUser())
+                .createdAt(LocalDateTime.now())
                 .build();
 
-        return transactionRepository.save(transaction);
+        Transaction saved = transactionRepository.save(transaction);
+
+        notificationService.createNotification(
+                email,
+                NotificationUtils.WITHDRAWAL,
+                String.format("Your withdrawal of ₦%,.2f was successful", request.getAmount())
+        );
+
+        return TransactionDto.builder()
+                .id(saved.getId())
+                .amount(saved.getAmount())
+                .type(saved.getType())
+                .status(saved.getStatus())
+                .createdAt(saved.getCreatedAt())
+                .message("Withdrawal processed successfully")
+                .build();
     }
+
 
     @Transactional
     public WalletDto addPoints(Long userId, int points) {

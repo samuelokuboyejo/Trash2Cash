@@ -1,5 +1,6 @@
-package com.trash2cash.users.model;
+package com.trash2cash.withdrawal;
 
+import com.trash2cash.users.model.User;
 import jakarta.persistence.*;
 import lombok.Data;
 

@@ -9,6 +9,7 @@ import jakarta.persistence.Enumerated;
 import lombok.*;
 import jakarta.persistence.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
@@ -45,6 +46,8 @@ public class WasteListing {
 
     @OneToOne(mappedBy = "wasteListing")
     private Transaction transaction;
+
+    private BigDecimal amount;
 
     private LocalDateTime createdAt;
 

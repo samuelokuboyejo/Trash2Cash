@@ -1,8 +1,10 @@
 package com.trash2cash.wallet;
 
+import com.trash2cash.transactions.TransactionDto;
 import com.trash2cash.users.dto.WalletDto;
 import com.trash2cash.users.dto.WithdrawRequest;
 import com.trash2cash.transactions.Transaction;
+import com.trash2cash.users.model.UserInfoUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -13,6 +15,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
@@ -58,9 +61,10 @@ public class WalletController {
 
     @Operation(summary = "Withdraw funds", description = "Processes withdrawal request via Paystack/Flutterwave")
     @PostMapping("/withdraw")
-    public ResponseEntity<Transaction> withdraw(@RequestBody WithdrawRequest request) {
-        Transaction transaction = walletService.withdraw(request);
-        return new ResponseEntity<>(transaction, HttpStatus.OK);
+    public ResponseEntity<TransactionDto> withdraw(@RequestBody WithdrawRequest request, @AuthenticationPrincipal UserInfoUserDetails principal) {
+        String email = principal.getUsername();
+        walletService.withdraw(request, email);
+        return  ResponseEntity.ok().build();
     }
 
     @Operation(

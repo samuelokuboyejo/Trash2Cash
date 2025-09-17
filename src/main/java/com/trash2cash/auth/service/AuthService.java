@@ -5,6 +5,8 @@ import com.trash2cash.auth.utils.AuthResponse;
 import com.trash2cash.auth.utils.GoogleTokenVerifier;
 import com.trash2cash.auth.utils.LoginResponse;
 import com.trash2cash.auth.utils.UserResponse;
+import com.trash2cash.notifications.NotificationRepository;
+import com.trash2cash.notifications.NotificationService;
 import com.trash2cash.users.dto.LoginRequest;
 import com.trash2cash.users.dto.RegisterRequest;
 import com.trash2cash.users.dto.UserDTO;
@@ -38,7 +40,7 @@ public class AuthService {
     private final AuthenticationManager authenticationManager;
     private final GoogleTokenVerifier googleTokenVerifier;
     private final WalletRepository walletRepository;
-    private final ApplicationEventPublisher publisher;
+    private final NotificationRepository notificationRepository;
     private final WalletService walletService;
 
 
@@ -85,6 +87,7 @@ public class AuthService {
                 .orElseThrow(() -> new RuntimeException("Wallet not found"));
         var accessToken = jwtService.generateToken(user.getEmail());
         var refreshToken = refreshTokenService.createRefreshToken(loginRequest.getEmail());
+        Long unreadCount = notificationRepository.countByUserIdAndReadStatusFalse(user.getId());
 
         return LoginResponse.builder()
                 .id(user.getId())
@@ -93,6 +96,7 @@ public class AuthService {
                 .refreshToken(refreshToken.getRefreshToken())
                 .points(wallet.getPoints())
                 .walletBalance(wallet.getBalance())
+                .unreadNotifications(unreadCount)
                 .build();
     }
 

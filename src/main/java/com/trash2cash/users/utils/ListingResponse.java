@@ -4,6 +4,7 @@ import com.trash2cash.users.enums.WasteStatus;
 import com.trash2cash.users.enums.WasteType;
 import lombok.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Getter
@@ -24,4 +25,6 @@ public class ListingResponse {
     private LocalDateTime time;
     private WasteStatus status;
     private Long createdBy;
+    private BigDecimal amount;
+
 }
