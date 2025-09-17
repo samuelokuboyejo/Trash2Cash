@@ -36,15 +36,20 @@ public class SecurityConfig {
                                 "/swagger-ui.html",
                                 "/wallets/*/points",
                                 "/wallets/*/deposit",
-                                "/listings/**"
+                                "/listings/**",
+                                "/activities/**"
 
                         ).permitAll()
-                        .requestMatchers("/profile/me").authenticated()
+                        .requestMatchers("/recycler/**").hasRole("RECYCLER")
+                        .requestMatchers("/generator/**").hasRole("GENERATOR")
+                        .requestMatchers("/profile/me", "/users/me").authenticated()
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
+//                .oauth2Login(Customizer.withDefaults())
+//                .formLogin(Customizer.withDefaults())
                 .authenticationProvider(authenticationProvider)
                 .addFilterBefore(authFilterService, UsernamePasswordAuthenticationFilter.class);
 

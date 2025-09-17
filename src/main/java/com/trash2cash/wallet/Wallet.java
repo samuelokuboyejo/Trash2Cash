@@ -1,6 +1,8 @@
-package com.trash2cash.users.model;
+package com.trash2cash.wallet;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.trash2cash.users.model.User;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -25,7 +27,7 @@ public class Wallet {
 
     @OneToOne
     @JoinColumn(name = "user_id",   nullable = false, unique = true, updatable = false)
-    @JsonBackReference
+    @JsonIgnore
     private User user;
 
     private LocalDateTime updatedAt = LocalDateTime.now();

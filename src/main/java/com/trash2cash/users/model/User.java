@@ -1,6 +1,9 @@
 package com.trash2cash.users.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.trash2cash.users.enums.Status;
+import com.trash2cash.users.enums.UserRole;
+import com.trash2cash.wallet.Wallet;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -11,7 +14,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 
-import java.net.ProtocolFamily;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
@@ -36,6 +38,15 @@ public class User implements UserDetails {
     @Column(name = "password")
     private String password;
 
+    @Enumerated(EnumType.STRING)
+    private UserRole role;
+
+    private String imageUrl;
+    private String location;
+
+    @Column(name = "phone")
+    private String phone;
+
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
     @JsonManagedReference
     private ForgotPassword forgotPassword;
@@ -44,6 +55,7 @@ public class User implements UserDetails {
     private RefreshToken refreshToken;
 
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, optional = false, orphanRemoval = true)
+    @JsonIgnore
     private Wallet wallet;
 
     private LocalDateTime termsAcceptedAt;

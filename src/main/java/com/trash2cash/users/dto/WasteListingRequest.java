@@ -15,6 +15,5 @@ public class WasteListingRequest {
     private double unit;
     private double weight;
     private String contactPhone;
-    private String imageUrl;
 
 }

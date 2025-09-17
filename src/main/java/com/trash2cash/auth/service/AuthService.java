@@ -1,18 +1,21 @@
 package com.trash2cash.auth.service;
 
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
-import com.google.auth.oauth2.JwtProvider;
 import com.trash2cash.auth.utils.AuthResponse;
 import com.trash2cash.auth.utils.GoogleTokenVerifier;
+import com.trash2cash.auth.utils.LoginResponse;
+import com.trash2cash.auth.utils.UserResponse;
 import com.trash2cash.users.dto.LoginRequest;
 import com.trash2cash.users.dto.RegisterRequest;
+import com.trash2cash.users.dto.UserDTO;
 import com.trash2cash.users.enums.Status;
+import com.trash2cash.users.enums.UserRole;
 import com.trash2cash.users.model.User;
-import com.trash2cash.users.model.Wallet;
+import com.trash2cash.wallet.Wallet;
 import com.trash2cash.users.repo.UserRepository;
-import com.trash2cash.users.repo.WalletRepository;
-import com.trash2cash.users.service.WalletService;
-import com.trash2cash.users.utils.UserCreatedEvent;
+import com.trash2cash.wallet.WalletDTO;
+import com.trash2cash.wallet.WalletRepository;
+import com.trash2cash.wallet.WalletService;
 import com.trash2cash.users.utils.UserProfileResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
@@ -23,9 +26,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.concurrent.CompletableFuture;
 
 @Service
 @RequiredArgsConstructor
@@ -57,13 +58,13 @@ public class AuthService {
                 .firstName(request.getFirstName())
                 .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))
-                .status(Status.ACTIVE)
+                .status(Status.PENDING_ROLE)
                 .termsAcceptedAt(LocalDateTime.now())
                 .createdAt(LocalDateTime.now())
                 .build();
         User savedUser = userRepository.save(user);
         createWalletAsync(savedUser.getId());
-        var accessToken = jwtService.generateToken(savedUser);
+        var accessToken = jwtService.generateToken(savedUser.getEmail());
         var refreshToken = refreshTokenService.createRefreshToken(savedUser.getEmail());
 
         return AuthResponse.builder()
@@ -72,7 +73,7 @@ public class AuthService {
                 .build();
     }
 
-    public UserProfileResponse login(LoginRequest loginRequest){
+    public LoginResponse login(LoginRequest loginRequest){
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         loginRequest.getEmail(),
@@ -82,18 +83,19 @@ public class AuthService {
         var user = userRepository.findByEmail(loginRequest.getEmail()).orElseThrow(()-> new UsernameNotFoundException("User not found"));
         Wallet wallet = walletRepository.findByUserId(user.getId())
                 .orElseThrow(() -> new RuntimeException("Wallet not found"));
-        var accessToken = jwtService.generateToken(user);
+        var accessToken = jwtService.generateToken(user.getEmail());
         var refreshToken = refreshTokenService.createRefreshToken(loginRequest.getEmail());
 
-        return UserProfileResponse.builder()
-                .firstName(user.getFirstName())
+        return LoginResponse.builder()
                 .id(user.getId())
-                .walletBalance(wallet.getBalance())
-                .points(wallet.getPoints())
+                .firstName(user.getFirstName())
                 .accessToken(accessToken)
                 .refreshToken(refreshToken.getRefreshToken())
+                .points(wallet.getPoints())
+                .walletBalance(wallet.getBalance())
                 .build();
     }
+
 
     public AuthResponse loginWithGoogle(String idToken) {
         GoogleIdToken.Payload payload = googleTokenVerifier.verify(idToken);
@@ -111,17 +113,17 @@ public class AuthService {
         User user = userRepository.findByEmail(email).orElseGet(() -> {
             User u = new User();
             u.setEmail(email);
-            u.setStatus(Status.ACTIVE);
+            u.setStatus(Status.PENDING_ROLE);
             u.setCreatedAt(LocalDateTime.now());
             u.setUpdatedAt(LocalDateTime.now());
             return userRepository.save(u);
         });
 
-        String accessToken = jwtService.generateToken(user.getId(), user.getEmail());
+//        String accessToken = jwtService.generateToken(user.getId(), user.getEmail());
         var refresh = refreshTokenService.createRefreshToken(user.getEmail());
 
         return AuthResponse.builder()
-                .accessToken(accessToken)
+//                .accessToken(accessToken)
                 .refreshToken(refresh.getRefreshToken())
                 .build();
     }

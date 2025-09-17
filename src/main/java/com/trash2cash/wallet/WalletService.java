@@ -1,14 +1,14 @@
-package com.trash2cash.users.service;
+package com.trash2cash.wallet;
 
 import com.trash2cash.users.dto.WalletDto;
 import com.trash2cash.users.dto.WithdrawRequest;
 import com.trash2cash.users.enums.TransactionType;
-import com.trash2cash.users.model.Transaction;
+import com.trash2cash.transactions.Transaction;
+import com.trash2cash.users.enums.WithdrawalStatus;
 import com.trash2cash.users.model.User;
-import com.trash2cash.users.model.Wallet;
-import com.trash2cash.users.repo.TransactionRepository;
+import com.trash2cash.users.service.PaymentGatewayService;
+import com.trash2cash.transactions.TransactionRepository;
 import com.trash2cash.users.repo.UserRepository;
-import com.trash2cash.users.repo.WalletRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -84,7 +84,7 @@ public class WalletService {
         Transaction transaction = Transaction.builder()
                 .amount(request.getAmount())
                 .type(TransactionType.WITHDRAWAL)
-                .status("SUCCESS")
+                .status(WithdrawalStatus.SUCCESS)
                 .user(wallet.getUser())
                 .build();
 

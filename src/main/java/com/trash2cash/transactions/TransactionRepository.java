@@ -1,7 +1,9 @@
-package com.trash2cash.users.repo;
+package com.trash2cash.transactions;
 
-import com.trash2cash.users.model.Transaction;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.util.List;
+
 public interface TransactionRepository extends JpaRepository<Transaction, Long> {
+    List<Transaction> findByUserId(Long userId);
 }

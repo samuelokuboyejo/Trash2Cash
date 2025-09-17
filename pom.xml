@@ -111,6 +111,25 @@
 			<artifactId>google-auth-library-oauth2-http</artifactId>
 			<version>1.24.0</version>
 		</dependency>
+
+		<dependency>
+			<groupId>com.cloudinary</groupId>
+			<artifactId>cloudinary-core</artifactId>
+			<version>1.32.2</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.cloudinary</groupId>
+			<artifactId>cloudinary-http44</artifactId>
+			<version>1.32.2</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.json</groupId>
+			<artifactId>json</artifactId>
+			<version>20230227</version>
+		</dependency>
+
 	</dependencies>
 
 	<build>

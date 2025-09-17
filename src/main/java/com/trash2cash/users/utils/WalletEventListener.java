@@ -1,8 +1,7 @@
 package com.trash2cash.users.utils;
 
-import com.trash2cash.users.service.WalletService;
+import com.trash2cash.wallet.WalletService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;

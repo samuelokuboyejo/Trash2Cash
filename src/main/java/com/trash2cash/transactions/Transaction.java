@@ -1,6 +1,9 @@
-package com.trash2cash.users.model;
+package com.trash2cash.transactions;
 
 import com.trash2cash.users.enums.TransactionType;
+import com.trash2cash.users.enums.WithdrawalStatus;
+import com.trash2cash.users.model.User;
+import com.trash2cash.waste.WasteListing;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -24,10 +27,16 @@ public class Transaction {
     @Enumerated(EnumType.STRING)
     private TransactionType type;
 
-    private String status;
-
     @ManyToOne
     private User user;
 
+    @Enumerated(EnumType.STRING)
+    private WithdrawalStatus status;
+
+    @OneToOne
+    @JoinColumn(name = "waste_listing_id", nullable = false)
+    private WasteListing wasteListing;
+
     private LocalDateTime createdAt = LocalDateTime.now();
+
 }

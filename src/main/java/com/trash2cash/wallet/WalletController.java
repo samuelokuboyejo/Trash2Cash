@@ -1,10 +1,8 @@
-package com.trash2cash.users.controller;
+package com.trash2cash.wallet;
 
 import com.trash2cash.users.dto.WalletDto;
 import com.trash2cash.users.dto.WithdrawRequest;
-import com.trash2cash.users.model.Transaction;
-import com.trash2cash.users.model.Wallet;
-import com.trash2cash.users.service.WalletService;
+import com.trash2cash.transactions.Transaction;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;

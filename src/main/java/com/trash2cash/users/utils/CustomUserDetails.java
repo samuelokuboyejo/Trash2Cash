@@ -19,6 +19,10 @@ public class CustomUserDetails implements UserDetails {
         return user;
     }
 
+    public Long getId() {
+        return user.getId();
+    }
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of();
@@ -53,4 +57,6 @@ public class CustomUserDetails implements UserDetails {
     public boolean isEnabled() {
         return user.isEnabled();
     }
+
+
 }

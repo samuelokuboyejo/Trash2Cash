@@ -1,6 +1,5 @@
-package com.trash2cash.users.repo;
+package com.trash2cash.wallet;
 
-import com.trash2cash.users.model.Wallet;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;
