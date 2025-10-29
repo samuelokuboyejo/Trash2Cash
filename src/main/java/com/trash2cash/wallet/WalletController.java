@@ -37,10 +37,11 @@ public class WalletController {
                     content = @Content(schema = @Schema(implementation = Wallet.class))),
             @ApiResponse(responseCode = "404", description = "Wallet not found")
     })
-    @GetMapping("/{userId}")
+    @GetMapping()
     public ResponseEntity<Wallet> getWallet(
-            @Parameter(description = "ID of the user", example = "1") @PathVariable Long userId) {
-        return ResponseEntity.ok(walletService.getUserWallet(userId));
+            @AuthenticationPrincipal UserInfoUserDetails principal) {
+        String email = principal.getUsername();
+        return ResponseEntity.ok(walletService.getUserWallet(email));
     }
 
     @Operation(
@@ -52,11 +53,14 @@ public class WalletController {
                     content = @Content(schema = @Schema(implementation = Wallet.class))),
             @ApiResponse(responseCode = "400", description = "Invalid deposit request")
     })
-    @PostMapping("/{userId}/deposit")
+    @PostMapping("/deposit")
     public ResponseEntity<WalletDto> deposit(
-            @Parameter(description = "ID of the user", example = "1") @PathVariable Long userId,
+            @AuthenticationPrincipal UserInfoUserDetails principal,
             @Parameter(description = "Amount to deposit", example = "1000.50") @RequestParam BigDecimal amount) {
-        return ResponseEntity.ok(walletService.deposit(userId, amount));
+        String email = principal.getUsername();
+        WalletDto response = walletService.deposit(email, amount);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+
     }
 
     @Operation(summary = "Withdraw funds", description = "Processes withdrawal request via Paystack/Flutterwave")
@@ -78,14 +82,16 @@ public class WalletController {
             @ApiResponse(responseCode = "400", description = "Invalid input (e.g. negative points)"),
             @ApiResponse(responseCode = "404", description = "Wallet or User not found")
     })
-    @PostMapping("/{userId}/points")
+    @PostMapping("/points")
     public ResponseEntity<WalletDto> addPoints(
-            @Parameter(description = "ID of the user whose wallet points will be updated", example = "1")
-            @PathVariable Long userId,
+            @AuthenticationPrincipal UserInfoUserDetails principal,
 
             @Parameter(description = "Number of points to add", example = "50")
             @RequestParam int points
     ) {
-        return ResponseEntity.ok(walletService.addPoints(userId, points));
+        String email = principal.getUsername();
+        WalletDto response = walletService.addPoints(email, points);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+
     }
 }

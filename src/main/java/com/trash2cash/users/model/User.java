@@ -15,6 +15,7 @@ import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
@@ -51,7 +52,8 @@ public class User implements UserDetails {
     @JsonManagedReference
     private ForgotPassword forgotPassword;
 
-    @OneToOne(mappedBy= "user")
+    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "refresh_token_id")
     private RefreshToken refreshToken;
 
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, optional = false, orphanRemoval = true)
@@ -63,8 +65,27 @@ public class User implements UserDetails {
     @Enumerated(EnumType.STRING)
     private Status status;
 
+    private String businessName;
+
+    private String businessType;
+
+    private String coverageArea;
+
+    private LocalDateTime lastLogin;
+
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+
+    private String authProvider;
+
+    @Column(columnDefinition = "float default 400")
+    private double co2Goal;
+
+    @Column(length = 60)
+    private String pinHash;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Device> devices = new ArrayList<>();
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

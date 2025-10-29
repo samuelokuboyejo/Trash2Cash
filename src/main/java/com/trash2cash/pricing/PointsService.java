@@ -16,23 +16,28 @@ public class PointsService {
     private final PointHistoryRepository pointHistoryRepository;
     private final WalletRepository walletRepository;
 
+    public int calculatePoints(double weightKg) {
+        return (int) Math.round(weightKg * 5);    // Multiply weight × 5, then round to nearest integer
+    }
+
     public void awardPoints(Long userId, int points, String reason) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("User not found"));
-
-        // Save history
         PointHistory history = PointHistory.builder()
                 .user(user)
                 .points(points)
                 .reason(reason)
                 .build();
         pointHistoryRepository.save(history);
-
-        // Update wallet points
         Wallet wallet = walletRepository.findByUserId(userId)
                 .orElseThrow(() -> new RuntimeException("Wallet not found"));
 
         wallet.setPoints(wallet.getPoints() + points);
         walletRepository.save(wallet);
+    }
+
+    public void awardPointsForWaste(Long userId, double weightKg) {
+        int points = calculatePoints(weightKg);
+        awardPoints(userId, points, "Created a listing of " + weightKg + " kg");
     }
 }

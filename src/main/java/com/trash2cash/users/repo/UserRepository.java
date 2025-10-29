@@ -1,5 +1,6 @@
 package com.trash2cash.users.repo;
 
+import com.trash2cash.users.enums.UserRole;
 import com.trash2cash.users.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -8,12 +9,20 @@ import org.springframework.stereotype.Repository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Optional;
 @Repository
 public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByEmail(String email);
+
+    List<User> findByRoleIn(List<UserRole> roles);
+
+    List<User> findByRole(UserRole userRole);
+
     boolean existsByEmail(String email);
     boolean existsByFirstName(String firstName);
+
+    List<User> findByEmailIn(List<String> emails);
 
     @Query("SELECT u FROM User u JOIN FETCH u.wallet WHERE u.email = :email")
     Optional<User> findByEmailWithWallet(@Param("email") String email);

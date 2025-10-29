@@ -1,28 +1,35 @@
 package com.trash2cash.waste;
 
+import com.trash2cash.impact.ImpactStatsService;
 import com.trash2cash.notifications.NotificationService;
 import com.trash2cash.notifications.NotificationUtils;
 import com.trash2cash.pricing.PointsService;
 import com.trash2cash.pricing.PricingService;
 import com.trash2cash.scheduler.ScheduleDto;
 import com.trash2cash.scheduler.SchedulerService;
+import com.trash2cash.transactions.Transaction;
+import com.trash2cash.transactions.TransactionRepository;
 import com.trash2cash.users.dto.WasteListingRequest;
+import com.trash2cash.users.enums.TransactionType;
 import com.trash2cash.users.enums.WasteStatus;
+import com.trash2cash.users.enums.WithdrawalStatus;
 import com.trash2cash.users.model.User;
 import com.trash2cash.users.repo.UserRepository;
 import com.trash2cash.users.service.CloudinaryService;
 import com.trash2cash.users.utils.ListingResponse;
+import com.trash2cash.users.utils.RecyclerUtils;
 import com.trash2cash.users.utils.UploadResponse;
+import com.trash2cash.wallet.Wallet;
+import com.trash2cash.wallet.WalletRepository;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.util.List;
 
 @Service
@@ -35,6 +42,9 @@ public class WasteListingService {
     private final SchedulerService schedulerService;
     private final PricingService pricingService;
     private final PointsService pointsService;
+    private final ImpactStatsService impactStatsService;
+    private  final WalletRepository walletRepository;
+    private  final TransactionRepository transactionRepository;
 
     public ListingResponse createListing(WasteListingRequest request, MultipartFile file, String email) throws IOException {
         User user = userRepository.findByEmail(email)
@@ -59,7 +69,18 @@ public class WasteListingService {
                 .build();
 
         WasteListing savedListing = wasteListingRepository.save(listing);
+        impactStatsService.recordImpact(user, request.getType(), request.getWeight());
+        pointsService.awardPointsForWaste(user.getId(), request.getWeight());
         notificationService.createNotification(email, NotificationUtils.PENDING_LISTING, "Reminder: Your pending waste listing is awaiting pickup.");
+        Double totalWeight = wasteListingRepository.sumWeightByGeneratorId(user.getId());
+
+        if (totalWeight >= 500 && totalWeight % 500 == 0) {
+            notificationService.createNotification(
+                    email,
+                    NotificationUtils.MILESTONE,
+                    "You reached a new milestone - 500kg waste recycled!"
+            );
+        }
         return ListingResponse.builder()
                 .id(savedListing.getId())
                 .title(savedListing.getTitle())
@@ -93,9 +114,33 @@ public class WasteListingService {
                         .time(listing.getCreatedAt())
                         .status(listing.getStatus())
                         .createdBy(listing.getCreatedBy())
+                        .amount(listing.getAmount())
                         .build())
 
                 .toList();    }
+
+    public List<ListingResponse> getAllOpenListings() {
+        List<WasteListing> listings = wasteListingRepository.findAll();
+
+        return listings.stream()
+                .filter(listing -> listing.getStatus() == WasteStatus.OPEN)
+                .map(listing -> ListingResponse.builder()
+                        .id(listing.getId())
+                        .title(listing.getTitle())
+                        .description(listing.getDescription())
+                        .pickupLocation(listing.getPickupLocation())
+                        .type(listing.getType())
+                        .unit(listing.getUnit())
+                        .weight(listing.getWeight())
+                        .contactPhone(listing.getContactPhone())
+                        .imageUrl(listing.getImageUrl())
+                        .time(listing.getCreatedAt())
+                        .status(listing.getStatus())
+                        .createdBy(listing.getCreatedBy())
+                        .amount(listing.getAmount())
+                        .build())
+                .toList();
+    }
 
     public List<ListingResponse> getListingsByUser(String email) {
         User user = userRepository.findByEmail(email)
@@ -116,10 +161,12 @@ public class WasteListingService {
                         .time(listing.getCreatedAt())
                         .status(listing.getStatus())
                         .createdBy(listing.getCreatedBy())
+                        .amount(listing.getAmount())
                         .build())
                 .toList();
     }
 
+    @Transactional
     public AcceptListingResponse acceptListing(Long listingId, String recyclerEmail) {
         User recycler = userRepository.findByEmail(recyclerEmail)
                 .orElseThrow(() -> new EntityNotFoundException("Recycler not found"));
@@ -136,12 +183,31 @@ public class WasteListingService {
         listing.setStatus(WasteStatus.SCHEDULED);
         wasteListingRepository.save(listing);
 
+        //   Credit generator’s wallet with listing amount
+        Wallet generatorWallet = walletRepository.findByUserId(listing.getGenerator().getId())
+                .orElseThrow(() -> new RuntimeException("Wallet not found for generator"));
+
+        generatorWallet.setBalance(generatorWallet.getBalance().add(listing.getAmount()));
+        notificationService.createNotification(listing.getGenerator().getEmail(), NotificationUtils.PAYMENT, "Congratulations! A recycler has paid for waste");
+        walletRepository.save(generatorWallet);
+
+        Transaction transaction = Transaction.builder()
+                .user(listing.getGenerator())
+                .amount(listing.getAmount())
+                .type(TransactionType.CREDIT)
+                .status(WithdrawalStatus.SUCCESSFUL)
+                .description("Payment for accepted listing #" + listing.getId())
+                .wasteListing(listing)
+                .createdAt(LocalDateTime.now())
+                .build();
+        transactionRepository.save(transaction);
+
         // Create default schedule
         ScheduleDto schedule = schedulerService.createSchedule(
                 listingId,
                 recyclerEmail,
-                LocalDate.now().plusDays(1),  // default tomorrow
-                LocalTime.of(10, 0),          // default 10 AM
+                null,
+                null,
                 listing.getPickupLocation()
         );
 
@@ -149,16 +215,19 @@ public class WasteListingService {
         notificationService.createNotification(
                 listing.getGenerator().getEmail(),
                 "Listing Accepted",
-                "Your listing has been accepted by " + recycler.getFirstName() +
-                        ". Pickup scheduled for " + schedule.getPickupDate() +
-                        " at " + schedule.getPickupTime()
+                "Your listing has been accepted by " + RecyclerUtils.getRecyclerDisplayName(recycler) +
+                        ". Pickup scheduled date pending "
         );
 
-        pointsService.awardPoints(recycler.getId(), 10, "Accepted a listing");        return new AcceptListingResponse(
-                "Listing accepted successfully. Schedule created.",
+        // Award points to recycler
+        pointsService.awardPoints(recycler.getId(), 10, "Accepted a listing");
+
+        return new AcceptListingResponse(
+                "Listing accepted successfully. Schedule created. Generator’s wallet credited.",
                 listing.getId(),
                 schedule
         );
     }
+
 
 }

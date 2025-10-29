@@ -2,5 +2,7 @@ package com.trash2cash.users.enums;
 
 public enum Status {
     ACTIVE,
-    PENDING_ROLE
+    PENDING_ROLE,
+    SUSPENDED,
+    DEACTIVATED
 }

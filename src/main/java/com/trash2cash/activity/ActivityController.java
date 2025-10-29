@@ -1,10 +1,13 @@
 package com.trash2cash.activity;
 import com.trash2cash.users.model.UserInfoUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
@@ -53,4 +56,24 @@ public class ActivityController {
         Page<ActivityDto> activities = activityService.getUserActivity(email, type, pageable);
         return  ResponseEntity.ok(activities);
     }
+
+    @Operation(
+            summary = "Get recycler activity",
+            description = "Fetches the activity history for a recycler, including waste title, weight, scheduled date/time, pickup location, and status.",
+            security = @SecurityRequirement(name = "bearerAuth")
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved recycler activity"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized - Bearer token missing or invalid"),
+            @ApiResponse(responseCode = "404", description = "Recycler not found")
+    })
+    @GetMapping("/recycler/activity")
+    public ResponseEntity<Page<RecyclerActivityDto>> getRecyclerActivity(
+            @Parameter(hidden = true) @AuthenticationPrincipal UserInfoUserDetails userDetails,
+            @ParameterObject Pageable pageable
+    ) {
+        Page<RecyclerActivityDto> activities = activityService.getRecyclerActivity(userDetails.getUsername(), pageable);
+        return ResponseEntity.ok(activities);
+    }
+
 }

@@ -1,5 +1,6 @@
 package com.trash2cash.auth.service;
 
+import com.trash2cash.users.model.User;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
@@ -10,6 +11,7 @@ import org.springframework.stereotype.Component;
 import javax.crypto.SecretKey;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
@@ -50,10 +52,18 @@ public class JwtService {
     }
 
 
-    public String generateToken(String userName){
-        Map<String,Object> claims=new HashMap<>();
-        return createToken(claims,userName);
+    public String generateToken(User user) {
+        Map<String, Object> claims = new HashMap<>();
+
+        String role = (user.getRole() == null)
+                ? null
+                : user.getRole().name();
+
+        claims.put("roles", role == null ? List.of() : List.of(role));
+
+        return createToken(claims, user.getEmail());
     }
+
 
     private String createToken(Map<String, Object> claims, String username) {
         return Jwts

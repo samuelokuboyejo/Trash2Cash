@@ -41,7 +41,7 @@ public class WasteListing {
     private WasteStatus status;
 
     @ManyToOne
-    @JoinColumn(name = "user_id", nullable = true)
+    @JoinColumn(name = "generator_id", nullable = true)
     private User generator;
 
     @OneToOne(mappedBy = "wasteListing")

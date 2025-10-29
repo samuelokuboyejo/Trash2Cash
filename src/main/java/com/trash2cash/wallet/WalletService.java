@@ -12,6 +12,8 @@ import com.trash2cash.users.model.User;
 import com.trash2cash.users.service.PaymentGatewayService;
 import com.trash2cash.transactions.TransactionRepository;
 import com.trash2cash.users.repo.UserRepository;
+import com.trash2cash.withdrawal.Withdrawal;
+import com.trash2cash.withdrawal.WithdrawalRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -28,10 +30,14 @@ public class WalletService {
     private final PaymentGatewayService paymentGatewayService;
     private final UserRepository userRepository;
     private final NotificationService notificationService;
+    private final WithdrawalRepository withdrawalRepository;
 
-    public Wallet getUserWallet(Long userId) {
-        return walletRepository.findByUserId(userId)
-                .orElseThrow(() -> new RuntimeException("Wallet not found for user " + userId));
+
+    public Wallet getUserWallet(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
+        return walletRepository.findByUserId(user.getId())
+                .orElseThrow(() -> new RuntimeException("Wallet not found for user " + user.getId()));
     }
 
     @Transactional
@@ -47,8 +53,8 @@ public class WalletService {
     }
 
     @Transactional
-    public WalletDto deposit(Long userId, BigDecimal amount) {
-        Wallet wallet = getUserWallet(userId);
+    public WalletDto deposit(String email, BigDecimal amount) {
+        Wallet wallet = getUserWallet(email);
         wallet.setBalance(wallet.getBalance().add(amount));
         wallet.setUpdatedAt(LocalDateTime.now());
         walletRepository.save(wallet);
@@ -88,16 +94,23 @@ public class WalletService {
         wallet.setBalance(wallet.getBalance().subtract(request.getAmount()));
         walletRepository.save(wallet);
 
-        // Log transaction
         Transaction transaction = Transaction.builder()
                 .amount(request.getAmount())
                 .type(TransactionType.WITHDRAWAL)
-                .status(WithdrawalStatus.SUCCESS)
+                .status(WithdrawalStatus.SUCCESSFUL)
                 .user(wallet.getUser())
                 .createdAt(LocalDateTime.now())
                 .build();
-
         Transaction saved = transactionRepository.save(transaction);
+
+        Withdrawal withdrawal = Withdrawal.builder()
+                .amount(transaction.getAmount())
+                .bankAccount(request.getAccountNumber().concat(request.getBankCode()))
+                .status(WithdrawalStatus.SUCCESSFUL)
+                .createdAt(LocalDateTime.now())
+                .user(wallet.getUser())
+                .build();
+        withdrawalRepository.save(withdrawal);
 
         notificationService.createNotification(
                 email,
@@ -117,8 +130,8 @@ public class WalletService {
 
 
     @Transactional
-    public WalletDto addPoints(Long userId, int points) {
-        Wallet wallet = getUserWallet(userId);
+    public WalletDto addPoints(String email, int points) {
+        Wallet wallet = getUserWallet(email);
         wallet.setPoints(wallet.getPoints() + points);
         return  WalletDto.builder()
                 .balance(wallet.getBalance())

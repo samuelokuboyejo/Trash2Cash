@@ -49,7 +49,6 @@ public class RecyclerListingController {
             @ApiResponse(responseCode = "403", description = "Unauthorized access (not a recycler)",
                     content = @Content(schema = @Schema(example = "{ \"error\": \"Access denied\" }")))
     })
-    @PreAuthorize("hasRole('RECYCLER')")
     @PostMapping("/{listingId}/accept")
     public ResponseEntity<AcceptListingResponse> acceptListing(
             @AuthenticationPrincipal UserInfoUserDetails principal,

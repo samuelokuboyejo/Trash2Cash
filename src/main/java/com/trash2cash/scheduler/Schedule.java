@@ -36,6 +36,9 @@ public class Schedule {
     @Enumerated(EnumType.STRING)
     private ScheduleStatus status;
 
+    @Column(nullable = true)
+    private String additionalNotes;
+
     private LocalDateTime createdAt;
     private LocalDateTime rescheduledAt;
 

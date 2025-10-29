@@ -36,13 +36,20 @@ public class SecurityConfig {
                                 "/swagger-ui.html",
                                 "/wallets/*/points",
                                 "/wallets/*/deposit",
+                                "/wallets/*",
+                                "/recycler/listings/*/accept",
+                                "/activities/**",
                                 "/listings/**",
-                                "/activities/**"
+                                "/ws/**",
+                                "/ws/info/**",
+                                "/admin/**"
 
                         ).permitAll()
-                        .requestMatchers("/recycler/**").hasRole("RECYCLER")
+//                        .requestMatchers("/recycler/listings/*/accept").hasRole("RECYCLER")
                         .requestMatchers("/generator/**").hasRole("GENERATOR")
+//                        .requestMatchers("/admin/**").hasRole("ADMIN")
                         .requestMatchers("/profile/me", "/users/me").authenticated()
+                        .requestMatchers("/", "/health").permitAll()
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session ->

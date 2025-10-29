@@ -1,8 +1,10 @@
 package com.trash2cash.scheduler;
 
 import com.trash2cash.notifications.NotificationService;
+import com.trash2cash.notifications.NotificationUtils;
 import com.trash2cash.users.model.User;
 import com.trash2cash.users.repo.UserRepository;
+import com.trash2cash.users.utils.RecyclerUtils;
 import com.trash2cash.waste.WasteListing;
 import com.trash2cash.waste.WasteListingRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -47,7 +49,7 @@ public class SchedulerService {
                 .weight(listing.getWeight())
                 .amount(schedule.getWasteListing().getTransaction() != null
                         ? schedule.getWasteListing().getTransaction().getAmount() : BigDecimal.ZERO)
-                .recyclerName(schedule.getRecycler().getFirstName())
+                .recyclerName(RecyclerUtils.getRecyclerDisplayName(schedule.getRecycler()))
                 .pickupDate(schedule.getPickupDate())
                 .pickupTime(schedule.getPickupTime())
                 .pickupLocation(schedule.getPickupLocation())
@@ -57,21 +59,42 @@ public class SchedulerService {
     }
 
     @Transactional
-    public ConfirmScheduleResponse confirmSchedule(Long listingId, String email) {
-        WasteListing listing = wasteRepo.findById(listingId)
+    public ConfirmScheduleResponse confirmSchedule(ConfirmDto dto, String email) {
+        WasteListing listing = wasteRepo.findById(dto.getListingId())
                 .orElseThrow(() -> new EntityNotFoundException("Listing not found"));
 
-        Schedule schedule = scheduleRepository.findByWasteListingId(listingId)
+        Schedule schedule = scheduleRepository.findByWasteListingId(dto.getListingId())
                 .orElseThrow(() -> new EntityNotFoundException("Schedule not found"));
 
         // ensure only generator can confirm
-        if (!listing.getGenerator().getEmail().equals(email)) {
+        if (!listing.getRecycler().getEmail().equals(email)) {
             throw new AccessDeniedException("Unauthorized to confirm schedule");
         }
 
+        schedule.setPickupLocation(dto.getPickupLocation());
+        schedule.setPickupDate(dto.getPickupDate());
+        schedule.setPickupTime(dto.getPickupTime());
+        schedule.setAdditionalNotes(dto.getAdditionalNotes());
         schedule.setStatus(ScheduleStatus.CONFIRMED);
         schedule.setUpdatedAt(LocalDateTime.now());
+
+        LocalDateTime scheduledDateTime = LocalDateTime.of(dto.getPickupDate(), dto.getPickupTime());
+
+// Set in WasteListing
+        listing.setScheduledDateTime(scheduledDateTime);
         scheduleRepository.save(schedule);
+
+        notificationService.createNotification(
+                listing.getGenerator().getEmail(),
+                NotificationUtils.PICKUP_SCHEDULE,
+                "Congratulations! You have successfully scheduled the pick"
+        );
+
+        notificationService.createNotification(
+                listing.getRecycler().getEmail(),
+                NotificationUtils.PICKUP_SCHEDULE,
+                "Congratulations! You have successfully scheduled the pick"
+        );
 
         return new ConfirmScheduleResponse("Schedule confirmed successfully", LocalDateTime.now());
     }
@@ -134,14 +157,7 @@ public class SchedulerService {
         schedule.setCreatedAt(LocalDateTime.now());
 
         Schedule saved = scheduleRepository.save(schedule);
-
-        // Create notification for generator
-        notificationService.createNotification(
-                email,
-                "Pickup Scheduled",
-                "Your pickup has been scheduled for " + pickupDate + " at " + pickupTime
-        );
-
+        
         return ScheduleDto.builder()
                 .scheduleId(saved.getId())
                 .listingId(listing.getId())

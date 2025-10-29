@@ -27,8 +27,8 @@ public class RefreshToken {
     @Column(nullable = false)
     private Instant expirationTime;
 
-    @OneToOne
-    @JoinColumn(name = "user_id")
+    @OneToOne(mappedBy = "refreshToken")
     @JsonBackReference
     private User user;
+
 }

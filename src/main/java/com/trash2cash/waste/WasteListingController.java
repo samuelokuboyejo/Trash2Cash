@@ -73,6 +73,14 @@ public class WasteListingController {
     public ResponseEntity<List<ListingResponse>> getAllListings() {
         return ResponseEntity.ok(wasteListingService.getAllListings());
     }
+    @GetMapping("/open")
+    @Operation(
+            summary = "Get all OPEN waste listings",
+            description = "Retrieves all available OPEN waste listings to be displayed on the dashboard"
+    )
+    public ResponseEntity<List<ListingResponse>> getAllOpenListings() {
+        return ResponseEntity.ok(wasteListingService.getAllOpenListings());
+    }
 
     @GetMapping("/me")
     @Operation(

@@ -1,6 +1,8 @@
 package com.trash2cash.users.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.trash2cash.users.dto.RecyclerProfileDto;
+import com.trash2cash.users.dto.RecyclerProfileUpdateRequest;
 import com.trash2cash.users.dto.UpdateProfileRequest;
 import com.trash2cash.users.dto.UserProfileDto;
 import com.trash2cash.users.model.UserInfoUserDetails;
@@ -124,6 +126,63 @@ public class UserController {
 
 
 
+    @Operation(
+            summary = "Update Recycler profile",
+            description = "Allows an authenticated user to update their profile details and optionally upload a profile image. "
+                    + "Only the owner of the profile can perform this action. "
+                    + "⚠️ Requires a valid Bearer access token in the Authorization header.",
+            security = {@SecurityRequirement(name = "bearerAuth")}
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Profile updated successfully",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = UserProfileDto.class))),
+            @ApiResponse(responseCode = "400", description = "Invalid request payload",
+                    content = @Content),
+            @ApiResponse(responseCode = "401", description = "Unauthorized (missing or invalid access token)",
+                    content = @Content),
+            @ApiResponse(responseCode = "403", description = "Forbidden (trying to update another user's profile)",
+                    content = @Content),
+            @ApiResponse(responseCode = "404", description = "User not found",
+                    content = @Content)
+    })
+    @PutMapping(value = "/recycler/profile", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<RecyclerProfileDto> updateRecyclerProfile(
+            @Parameter(
+                    description = "Profile update request (JSON string in the multipart request). " +
+                            "Send as part named 'data' with content-type application/json. " +
+                            "Example: {\"firstName\":\"John Doe\",\"phone\":\"+2348012345678\",\"businessName\":\"Eco Recyclers Ltd\",\"businessType\":\"Plastic Recycling\",\"coverageArea\":\"Lagos, Nigeria\"}",
+
+                    required = true,
+                    content = @Content(
+                            mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = UpdateProfileRequest.class,
+                                    example = """
+                                {
+                                  "name": "John Doe",
+                                  "phone": "+2348012345678",
+                                  "location": "Lagos, Nigeria"
+                                }
+                                """)
+                    )
+            )
+            @RequestPart("data") String reqJson,
+
+            @Parameter(
+                    description = "Optional profile image file (multipart file part)",
+                    required = false
+            )
+            @RequestPart(value = "file", required = false) MultipartFile file,
+
+            @AuthenticationPrincipal UserInfoUserDetails principal
+    ) throws IOException {
+        if (principal == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        String email = principal.getUsername();
+        RecyclerProfileUpdateRequest req = new ObjectMapper().readValue(reqJson, RecyclerProfileUpdateRequest.class);
+        return ResponseEntity.ok(userService.updateRecyclerProfile(email, req, file));
+    }
 
 
 }

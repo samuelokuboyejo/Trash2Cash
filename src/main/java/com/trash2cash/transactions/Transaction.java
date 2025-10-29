@@ -1,5 +1,6 @@
 package com.trash2cash.transactions;
 
+import com.trash2cash.users.enums.TransactionStatus;
 import com.trash2cash.users.enums.TransactionType;
 import com.trash2cash.users.enums.WithdrawalStatus;
 import com.trash2cash.users.model.User;
@@ -27,8 +28,14 @@ public class Transaction {
     @Enumerated(EnumType.STRING)
     private TransactionType type;
 
+    private String description;
+
     @ManyToOne
     private User user;
+
+    private Long walletId;
+
+    private TransactionStatus transactionStatus;
 
     @Enumerated(EnumType.STRING)
     private WithdrawalStatus status;
@@ -39,4 +46,5 @@ public class Transaction {
 
     private LocalDateTime createdAt = LocalDateTime.now();
 
+    private LocalDateTime updatedAt;
 }
